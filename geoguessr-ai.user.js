@@ -8,6 +8,8 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
+// @updateURL   https://raw.githubusercontent.com/dein-username/repo-name/main/geoguessr-ai.user.js
+// @downloadURL https://raw.githubusercontent.com/dein-username/repo-name/main/geoguessr-ai.user.js
 // ==UserScript==
 
 (function () {
