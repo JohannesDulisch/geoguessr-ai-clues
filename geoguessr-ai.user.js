@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         GeoGuessr AI Plonk It Coach Pro (Gemini Pro Edition)
+// @name         GeoGuessr AI Plonk It Coach Pro (Stylisches UI)
 // @namespace    http://tampermonkey.net/
-// @version      8.2
-// @description  Nutzt Google Gemini 1.5 Pro (Stabile Version) für exzellente Vision-Analysen.
+// @version      9.2
+// @description  Stabile Version mit Lade-auf-Knopfdruck-Logik und neuem Floating Overlay Design (oben rechts).
 // @match        https://www.geoguessr.com/*
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
@@ -16,8 +16,6 @@
     'use strict';
 
     const win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-
-    // Fallback, falls der Dev Loader den Key nicht gesetzt hat
     const DEFAULT_API_KEY = "";
 
     let lastLocation = null;
@@ -199,26 +197,42 @@
         } catch (err) { return null; }
     }
 
-    // --- UI BUTTONS ---
+    // --- UI BUTTONS (NEUES OVERLAY DESIGN) ---
     const observer = new MutationObserver(() => {
         const resultScreen = document.querySelector('[class*="result-layout_root"]') || document.querySelector('[class*="game-summary"]') || document.querySelector('[class*="styles_endGameContainer"]');
         if (resultScreen && !document.getElementById('ai-btn-container')) {
-            injectButtons(resultScreen);
+            injectFloatingButtons();
         }
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    function injectButtons(parent) {
+    function injectFloatingButtons() {
         const container = document.createElement('div');
         container.id = 'ai-btn-container';
-        container.style.cssText = 'display: flex; gap: 10px; margin: 10px; z-index: 9999;';
+
+        // HIER IST DAS NEUE DESIGN: Fest verankert, schwebend, Glas-Effekt
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 99999;
+            background: rgba(24, 24, 27, 0.8);
+            padding: 8px 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(63, 63, 70, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        `;
 
         const btnVision = document.createElement('button');
         btnVision.innerHTML = '✨ <span style="margin-left:5px;">Gemini Meta Check</span>';
         btnVision.style.cssText = `
-            padding: 10px 20px; background: linear-gradient(135deg, #1d4ed8, #2563eb);
-            color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(29, 78, 216, 0.4); transition: transform 0.2s;
+            padding: 8px 16px; background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3); transition: transform 0.2s;
+            font-size: 13px;
         `;
         btnVision.onmouseover = () => btnVision.style.transform = 'scale(1.05)';
         btnVision.onmouseout = () => btnVision.style.transform = 'scale(1)';
@@ -227,9 +241,10 @@
         const btnFacts = document.createElement('button');
         btnFacts.innerHTML = '📜 <span style="margin-left:5px;">Fun Facts</span>';
         btnFacts.style.cssText = `
-            padding: 10px 20px; background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); transition: transform 0.2s;
+            padding: 8px 16px; background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); transition: transform 0.2s;
+            font-size: 13px;
         `;
         btnFacts.onmouseover = () => btnFacts.style.transform = 'scale(1.05)';
         btnFacts.onmouseout = () => btnFacts.style.transform = 'scale(1)';
@@ -237,7 +252,9 @@
 
         container.appendChild(btnVision);
         container.appendChild(btnFacts);
-        parent.appendChild(container);
+
+        // Wir hängen es direkt an den body, damit es über allem liegt
+        document.body.appendChild(container);
     }
 
     // --- FUN FACTS ANFRAGE (GEMINI API) ---
@@ -279,7 +296,6 @@ Format: Kurze, knackige Bulletpoints auf Deutsch. Keine roboterhaften Einleitung
             }
         };
 
-        // FIXED: gemini-1.5-pro
         GM_xmlhttpRequest({
             method: "POST",
             url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
